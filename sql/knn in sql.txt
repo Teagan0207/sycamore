@@ -1,0 +1,80 @@
+create function get$$Knn(
+    pLocall in float
+   ,pInternational in float
+   ,pLongdist in float
+   ,k in INT
+)
+
+RETURN INT
+AS
+BEGIN
+   DECLARE CHURNED INT;
+   
+   WITH base_query
+   AS (
+      SELECT Locall,
+      (Locall -Min(Locall) OVER ())*1.0 /(MAX(Locall) OVER() -MIN(Locall) OVER()) 
+       AS LocallNorm,
+       International,
+      (International -Min(International) OVER ())*1.0 /(MAX(International) OVER() -MIN(International) OVER()) 
+       AS InternationalNorm,
+       Longdist,
+      (Longdist -Min(Longdist) OVER ())*1.0 /(MAX(Longdist) OVER() -MIN(Longdist) OVER()) 
+       AS LongdistNorm,
+   FROM CHURNTRAINING
+   )
+   ,base_query_nearest
+   AS (
+      SELECT *,
+      sqrt(power((pLocall-LocallNorm)*1.0,2)+power((pInternational-InternationalNorm)*1.0,2)+power((pLongdist-LongdistNorm)*1.0,2))
+      AS distance
+      FROM base_query
+      )
+      ,base_knn
+   AS (
+      SELECT TOP (k) *
+      FROM base_query_nearest
+      ORDER BY distance ASC
+      )
+   SELECT CHURNED=Churned
+   FROM (
+        SELECT TOP 1 Churned,
+               count(*)  AS totals
+        FROM base_knn
+        GROUP BY Churned
+        ORDER BY totals DESC
+        ) tmp
+    RETURN CHURNED
+END
+
+;WITH base_query
+AS (
+   SELECT Locall,
+        (Locall-(SELECT Min(Locall) FROM CHURNTESTING))*1.0/(
+          (SELECT MAX(Locall) FROM CHURNTESTING)-(SELECT MIN(Locall) FROM CHURNTESTING)
+        ) AS LocalNorm,
+        International,
+        (International-(SELECT Min(International) FROM CHURNTESTING))*1.0/(
+          (SELECT MAX(International) FROM CHURNTESTING)-(SELECT MIN(International)FROM CHURNTESTING)
+        ) AS InternationalNorm,
+        Longdist,
+        (Longdist-(SELECT Min(Longdist) FROM CHURNTESTING))*1.0/(
+          (SELECT MAX(Longdist) FROM CHURNTESTING)-(SELECT MIN(Longdist)FROM CHURNTESTING)
+        ) AS LongdistNorm,
+        Churned
+    FROM CHURNTESTING
+
+SELECT sum(ChurnAccuracy)*1.0/sum(Cnt) AS accuracy
+FROM (
+     SELECT CASE
+            WHEN Churned <> ChurnedNorm
+                 THEN 0.0
+            ELSE 1.0
+            END AS ChurnAccuracy,
+         1.0 AS Cnt
+     FROM (
+          SELECT t3.*, 
+          get$$Knn(LocallNorm,InternationalNorm,LongdistNorm,3) ChurnedNorm
+          FROM base_query t3
+          ) tmp
+      )
