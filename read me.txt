@@ -1,0 +1,75 @@
+Final Project Explanation:
+
+Structure:
+   Mainly consist of two parts, a card game(without gui) and some tkinter gui part. 
+   The latter one is written with the help of documents(you can find website within the comments) 
+   I didn't rely on any exist codes for the card game part, 
+   instead I improve the card game and think of some function extensions.  
+
+card game rules:
+   An extension of "24-points-game", seeing whose sum(cards) is closer to goal.
+   Only computer and player play the game.
+   First, player set a goal;
+   Next, computer randomly arrange cards, initially four cards in player' and computers' hand.
+   Then, computer randomly choose who takes the first turn to make movements.
+   After that, Computer and player make movements in turn.
+
+   Movement:
+     For computer and player:
+      three movement are included normally: draw, discard, end
+         draw means draw one card randomly from untouched cards.
+         discard means discard one card by choice from held cards.(player only enter rank)
+         end is used when sum(cards) is close to the goal, and to give up future movements.
+
+     For player specially:
+      two special movements are included: quit, reset
+         input quit to quit at any time,and computer will ask you whether to play again
+         reset is used, for example, you choose to discard, and computer asks you which card to discard, 
+               and suddenly you want to draw instead of discard, so you can input reset
+         *besides, if there are two cards of the same rank, computer will ask which suit you want to discard
+
+   When to end:
+     if computer or player choose to give up future movement
+     if computer or player sum(cards) exceed goal
+     if there's no more card to draw from
+     if player input quit
+     if player evily discard all cards from his hand
+
+   How to judge the winner:
+     The one whose score is closer to 0 is the winner of this round.
+     A total score of many rounds will be given at the end.
+
+   How to calculate the score:
+      if sum(cards)<goal, score is goal-sum(cards)
+      if sum(cards)>goal, there will be a penalty, score is sum(cards)-goal
+      if the held cards are all same color, there will be a bonus, score=score/3
+      if player evily discard all held cards to achieve better score, a huge penalty will be added, score=score+1000
+
+   Computer's algorithm:
+      if there is large distance between sum(cards) and goal, computer continue drawing
+      if this distance <2, or distance <5 but <5distance(player)<10, computer choose to end
+      if 2<distance<10,computer discard one card
+         because of the same color bonus,
+         computer always discard the minimum card from the minority color
+
+   What is in the file(.txt):
+      game time,
+      record each movement of computer and player
+      record how long it lasts
+      record the final score of each round and total final score
+
+   Whats' more...:
+      I have defined two my errors: illegalmove and nonexist
+      I have also tested for all possible bugs
+      you can input anything you like, and the program will not breakup and go on looping properly.
+
+
+About GUI:
+   first, you do not need to change the file path by hand, the tkinter will ask you to open a txt
+      * attention: you should execute this program to "play again?" and you input no, otherwise there will be nothing in the text
+   second, there will be some simple directions at the beginning using messagebox
+   last, each time you complete a round of game, computer will ask you relax or not, if you choose yes, you will go into the prize drawer 
+
+
+     
+   
